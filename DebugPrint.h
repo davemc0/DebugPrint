@@ -6,11 +6,11 @@
 #include <windows.h>
 
 // Considerations:
-// Compiler seeing all the code
-// Not executing all the code if not printing (more performant) vs. executing it (better for side-effects)
-// A hidden if() has hidden syntax pitfalls
-// A static stream may not be thread-safe and is inelegant
-// Having to put a terminator would be annoying
+// Compiler seeing all the code, even in debug mode, so it doesn't get crufty when in release mode.
+// Not executing all the code if not printing (more performant) vs. executing it (better for side-effects): Chose executing it
+// A hidden if() has hidden syntax pitfalls. This avoids them.
+// A static stream may not be thread-safe and is inelegant. How can I avoid it?
+// Having to put a terminator at the end of the stream is kind of annoying.
 // Need to package the user-provided output into one string for C-style printing by the bigger system
 
 #ifdef _DEBUG
@@ -29,6 +29,7 @@
 // Use like DPRINT(50, "Warning: %d is bad.\n");
 #define DPRINT(severity_, fmt, ...) DebugPrint::getSingleton()->print(DBGBOOL, severity_, __FILE__, __LINE__, fmt, __VA_ARGS__);
 
+// Call this macro to change the verbosity level for future prints
 #define DBGSETVERBOSITY(v) DebugPrint::getSingleton()->setVerbosity(v);
 
 // An error checker macro for OpenCL calls
