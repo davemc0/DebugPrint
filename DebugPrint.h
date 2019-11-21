@@ -22,11 +22,11 @@
 //////////////////////////////////////////////////////////////////////////////////////
 // Interface
 
-// Use like DBGS(10) << "Warning: " << x << " is bad." << DEND;
+// Usage: DBGS(10) << "Warning: " << x << " is bad." << DEND;
 #define DBGS(severity_) DebugPrint::getSingleton()->streamPrint(DBGBOOL, severity_, __FILE__, __LINE__)
 #define DEND DebugPrint::streamEnd
 
-// Use like DPRINT(50, "Warning: %d is bad.\n");
+// Usage: DPRINT(50, "Warning: %d is bad.\n");
 #define DPRINT(severity_, fmt, ...) DebugPrint::getSingleton()->print(DBGBOOL, severity_, __FILE__, __LINE__, fmt, __VA_ARGS__);
 
 // Call this macro to change the verbosity level for future prints

@@ -14,6 +14,8 @@ std::ostream& operator<<(std::ostream& stream, const hardToPrint_t& rhs)
 
 int main(int argc, char** argv)
 {
+    DPRINT(30, "Hello %d\n", 1);
+
     // Do a few debug prints
     for (int i = 0; i < 10; i++) {
         DBGS(10) << "Warning: There are " << hardToPrint_t(i) << " trolls in the dungeon." << DEND;
