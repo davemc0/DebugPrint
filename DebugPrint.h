@@ -13,72 +13,23 @@
 // Having to put a terminator would be annoying
 // Need to package the user-provided output into one string for C-style printing by the bigger system
 
-// Print any message with severity <= g_verbosity (smaller numbers are more important).
-const int g_verbosity = 30;
-
 #ifdef _DEBUG
 #define DBGBOOL true
 #else
 #define DBGBOOL false
 #endif
 
-int getDbgStrStrPtr()
-{
-    static int i = std::ios_base::xalloc();
-    return i;
-}
+//////////////////////////////////////////////////////////////////////////////////////
+// Interface
 
-// Grab the accumulated string and print it (also add EOL).
-std::ostream& dbgStreamEnd(std::ostream& os)
-{
-    os << std::endl;
-    std::stringstream* pstrstr = reinterpret_cast<std::stringstream*>(os.pword(getDbgStrStrPtr()));
-    if (pstrstr) {
-        fprintf(stderr, "[TIMESTAMP]: %s", pstrstr->str().c_str());
-        OutputDebugString(pstrstr->str().c_str());
-    }
+// Use like DBGS(10) << "Warning: " << x << " is bad." << DEND;
+#define DBGS(severity_) DebugPrint::getSingleton()->streamPrint(DBGBOOL, severity_, __FILE__, __LINE__)
+#define DEND DebugPrint::streamEnd
 
-    return os;
-}
+// Use like DPRINT(50, "Warning: %d is bad.\n");
+#define DPRINT(severity_, fmt, ...) DebugPrint::getSingleton()->print(DBGBOOL, severity_, __FILE__, __LINE__, fmt, __VA_ARGS__);
 
-#define DBGS(severity_) debugStrPrintCond(g_verbosity >= severity_ && DBGBOOL, __FILE__, __LINE__)
-#define DEND dbgStreamEnd
-
-std::stringstream s_dbgstrstr;
-
-std::ostream& debugStrPrintCond(bool cond, const char* fname, const int lineno)
-{
-    s_dbgstrstr.clear();            // clear any bits set
-    s_dbgstrstr.str(std::string()); // remove contents
-
-    if (cond)
-        s_dbgstrstr.pword(getDbgStrStrPtr()) = &s_dbgstrstr; // Store a pointer to the stringstream inside its ostream baseclass for later access.
-    else
-        s_dbgstrstr.pword(getDbgStrStrPtr()) = nullptr;
-    s_dbgstrstr << fname << '(' << lineno << "): "; // Should it instead store these values in iwords to be streamed at the end?
-
-    return s_dbgstrstr;
-}
-
-struct hardToPrint_t
-{
-    int x;
-    hardToPrint_t(int x_) : x(x_) {}
-};
-
-std::ostream& operator<<(std::ostream& stream, const hardToPrint_t& rhs)
-{
-    stream << "[" << rhs.x << "]";
-    return stream;
-}
-
-void tryDebugPrint()
-{
-    for (int i = 0; i < 10; i++) {
-        DBGS(10) << "Warning: " << hardToPrint_t(1) << " I just thought you ought to know." << DEND;
-        DBGS(50) << "FYI: " << hardToPrint_t(2) << DEND;
-    }
-}
+#define DBGSETVERBOSITY(v) DebugPrint::getSingleton()->setVerbosity(v);
 
 // An error checker macro for OpenCL calls
 #define CLERRCK(op)                                                         \
@@ -86,3 +37,39 @@ void tryDebugPrint()
         int res = op;                                                       \
         if (op != 0) { printf("error: '%s'\n", std::string(#op).c_str()); } \
     }
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Implementation
+
+class DebugPrint
+{
+public:
+    DebugPrint();
+    DebugPrint(const DebugPrint&) = delete;
+    DebugPrint& operator=(const DebugPrint) = delete;
+
+    // Return a stream that debug info can be streamed to.
+    // Streams the fname and line number into that stream.
+    // Condition must be true.
+    // After the last item to add to the stream, you must stream streamEnd
+    std::ostream& streamPrint(bool cond, int severity, const char* fname, const int lineno);
+
+    // Grabs the accumulated string and print it (also adds EOL).
+    static std::ostream& streamEnd(std::ostream& os);
+
+    void print(bool cond, int severity, const char* fname, const int lineno, char const* const fmt, ...);
+
+    static DebugPrint* getSingleton() { return s_onlyDebugPrint; }
+
+    void setVerbosity(const int v) { m_verbosity = v; }
+    int getVerbosity() const { return m_verbosity; }
+
+private:
+    // Print any message with severity <= m_verbosity (smaller numbers are more important).
+    int m_verbosity = 30;
+
+    std::stringstream m_dbgstrstr;
+
+    // A pointer to the singleton instance of the DebugPrint class
+    static DebugPrint* s_onlyDebugPrint;
+};

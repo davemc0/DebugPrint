@@ -123,6 +123,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="asprintf.h" />
+    <ClInclude Include="DebugPrint.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DebugPrint.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
